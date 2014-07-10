@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmi:id="_XbblUAdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ide.application">
+  <children xsi:type="basic:TrimmedWindow" xmi:id="_XbblUQdGEeSJ1b6wS597rw" label="DevDesigner" width="500" height="400">
+    <children xsi:type="basic:PartSashContainer" xmi:id="_oxqRUAdGEeSJ1b6wS597rw" elementId="devdesigner.partsashcontainer.0" horizontal="true">
+      <children xsi:type="basic:PartStack" xmi:id="_tXyH4AdGEeSJ1b6wS597rw" elementId="devdesigner.partstack.0" containerData="25">
+        <children xsi:type="basic:Part" xmi:id="_v6hxcAdGEeSJ1b6wS597rw" elementId="devdesigner.part.projectTree" contributionURI="bundleclass://DevDesigner/DevDesigner.ProjectTree" label="ProjectTree"/>
+      </children>
+      <children xsi:type="basic:PartStack" xmi:id="_t3zEsAdGEeSJ1b6wS597rw" elementId="devdesigner.partstack.1" containerData="75">
+        <children xsi:type="basic:Part" xmi:id="_RPnhUAdcEeSJ1b6wS597rw" elementId="devdesigner.part.0" label="Empty"/>
+        <children xsi:type="basic:Part" xmi:id="_zahwoAdKEeSJ1b6wS597rw" elementId="devdesigner.part.actiongroupedit" contributionURI="bundleclass://DevDesigner/DevDesigner.ActionGroupEditor" label="ActionGroup (Mask) Editor"/>
+        <children xsi:type="basic:Part" xmi:id="__Etf0AdKEeSJ1b6wS597rw" elementId="devdesigner.part.widgets" contributionURI="bundleclass://DevDesigner/DevDesigner.WidgetEditor" label="UI Widget Definition"/>
+        <children xsi:type="basic:Part" xmi:id="_B6CuMAdLEeSJ1b6wS597rw" elementId="devdesigner.part.tecbin" contributionURI="bundleclass://DevDesigner/DevDesigner.TechnicalBindingEditor" label="Technical Binding Editor"/>
+        <children xsi:type="basic:Part" xmi:id="_jAb7wAdVEeSJ1b6wS597rw" elementId="devdesigner.part.elementList" contributionURI="bundleclass://DevDesigner/DevDesigner.ElementListPart" label="Element List"/>
+      </children>
+    </children>
+  </children>
+  <addons xmi:id="_XbblUgdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
+  <addons xmi:id="_XbblUwdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
+  <addons xmi:id="_XbblVAdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
+  <addons xmi:id="_XbblVQdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.workbench.commands.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.CommandProcessingAddon"/>
+  <addons xmi:id="_XbblVgdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.workbench.handler.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.HandlerProcessingAddon"/>
+  <addons xmi:id="_XbblVwdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.workbench.contexts.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.ContextProcessingAddon"/>
+  <addons xmi:id="_XbblWAdGEeSJ1b6wS597rw" elementId="org.eclipse.e4.ui.workbench.bindings.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.swt/org.eclipse.e4.ui.workbench.swt.util.BindingProcessingAddon"/>
+</application:Application>
