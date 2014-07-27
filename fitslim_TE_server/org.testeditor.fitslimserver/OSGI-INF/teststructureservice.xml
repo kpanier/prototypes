@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.testeditor.fitslimserver.FitSlimTestStructureService">
+   <implementation class="org.testeditor.fitslimserver.FitSlimTestStructureService"/>
+   <service>
+      <provide interface="org.testeditor.core.services.interfaces.TestStructureService"/>
+   </service>
+</scr:component>
