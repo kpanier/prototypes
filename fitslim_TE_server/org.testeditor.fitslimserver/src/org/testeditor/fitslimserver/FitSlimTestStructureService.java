@@ -37,6 +37,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import fitnesse.ContextConfigurator;
+import fitnesse.FitNesseContext;
+import fitnesse.PluginException;
+
 public class FitSlimTestStructureService implements TestStructureService {
 
 	private static final Logger LOGGER = Logger.getLogger(FitSlimTestStructureService.class);
@@ -53,7 +57,9 @@ public class FitSlimTestStructureService implements TestStructureService {
 						File[] listFiles = file.toFile().listFiles(getPropertyFiler());
 						if (listFiles.length > 0) {
 							TestStructure structure = createTestStructureFrom(listFiles[0]);
-							testCompositeStructure.addChild(structure);
+							if (structure != null) {
+								testCompositeStructure.addChild(structure);
+							}
 						}
 					}
 				}
@@ -85,7 +91,9 @@ public class FitSlimTestStructureService implements TestStructureService {
 						break;
 					}
 				}
-				result.setName(propertyFile.getParentFile().getName());
+				if (result != null) {
+					result.setName(propertyFile.getParentFile().getName());
+				}
 			}
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			LOGGER.error("Error lodaingg properties of teststructrue", e);
@@ -98,8 +106,11 @@ public class FitSlimTestStructureService implements TestStructureService {
 		return new FilenameFilter() {
 
 			@Override
-			public boolean accept(File arg0, String arg1) {
-				return arg0.isDirectory();
+			public boolean accept(File dir, String name) {
+				if (name.startsWith(".")) {
+					return false;
+				}
+				return dir.isDirectory();
 			}
 		};
 	}
@@ -135,7 +146,13 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public TestResult executeTestStructure(TestStructure testStructure, IProgressMonitor monitor)
 			throws SystemException, InterruptedException {
-		// TODO Auto-generated method stub
+		try {
+			FitNesseContext context = ContextConfigurator.systemDefaults().makeFitNesseContext();
+
+		} catch (IOException | PluginException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 
