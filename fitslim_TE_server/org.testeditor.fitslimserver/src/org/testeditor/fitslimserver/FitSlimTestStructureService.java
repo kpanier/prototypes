@@ -37,9 +37,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import fitnesse.ContextConfigurator;
-import fitnesse.FitNesseContext;
-import fitnesse.PluginException;
+import util.TimeMeasurement;
+import fitnesse.junit.JUnitHelper;
+import fitnesse.responders.run.CompositeExecutionLog;
+import fitnesse.responders.run.ResultsListener;
+import fitnesse.responders.run.TestPage;
+import fitnesse.responders.run.TestSummary;
+import fitnesse.responders.run.TestSystem;
 
 public class FitSlimTestStructureService implements TestStructureService {
 
@@ -47,8 +51,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void loadTestStructuresChildrenFor(TestCompositeStructure testCompositeStructure) throws SystemException {
-		String pathInProject = testCompositeStructure.getFullName().replaceAll("\\.", "/");
-		Path path = Paths.get(Platform.getLocation().toFile().toPath().toString() + "/" + pathInProject);
+		Path path = Paths.get(getPathTo(testCompositeStructure));
 		try {
 			for (Path file : Files.newDirectoryStream(path)) {
 				if (file.toFile().isDirectory()) {
@@ -68,6 +71,14 @@ public class FitSlimTestStructureService implements TestStructureService {
 			LOGGER.error("Unable to scan directory", e);
 			throw new SystemException("Unable to scan directory", e);
 		}
+	}
+
+	public String getPathTo(TestStructure testStructure) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getPathToProject(testStructure));
+		String pathInProject = testStructure.getFullName().replaceAll("\\.", File.separator);
+		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append(pathInProject);
+		return sb.toString();
 	}
 
 	protected TestStructure createTestStructureFrom(File propertyFile) throws SystemException {
@@ -147,13 +158,73 @@ public class FitSlimTestStructureService implements TestStructureService {
 	public TestResult executeTestStructure(TestStructure testStructure, IProgressMonitor monitor)
 			throws SystemException, InterruptedException {
 		try {
-			FitNesseContext context = ContextConfigurator.systemDefaults().makeFitNesseContext();
 
-		} catch (IOException | PluginException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			Thread.currentThread().setContextClassLoader(JUnitHelper.class.getClassLoader());
+			// System.getProperty("java.io.tmpdir")
+			JUnitHelper jUnitHelper = new JUnitHelper(getPathToProject(testStructure), "/home/karsten/dummy/tmp",
+					getResultListener());
+			jUnitHelper.setPort(8898);
+			jUnitHelper.assertTestPasses(testStructure.getFullName());
+			Thread.currentThread().setContextClassLoader(classLoader);
+		} catch (Exception e) {
+			LOGGER.error("Executing TestStructure: " + testStructure, e);
 		}
 		return null;
+	}
+
+	public String getPathToProject(TestStructure testStructure) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(Platform.getLocation().toFile().toPath().toString()).append(File.separator)
+				.append(testStructure.getRootElement().getName());
+		return sb.toString();
+	}
+
+	private ResultsListener getResultListener() {
+		return new ResultsListener() {
+
+			@Override
+			public void testSystemStarted(TestSystem testSystem, String testSystemName, String testRunner) {
+				System.err
+						.println("FitSlimTestStructureService.getResultListener().new ResultsListener() {...}.testSystemStarted(): "
+								+ testRunner);
+			}
+
+			@Override
+			public void testOutputChunk(String output) throws IOException {
+				System.err.println(">>>>>> Chunk: " + output);
+			}
+
+			@Override
+			public void testComplete(TestPage test, TestSummary testSummary, TimeMeasurement timeMeasurement)
+					throws IOException {
+				System.err.println("+++++ Testconmpletet: " + test);
+			}
+
+			@Override
+			public void setExecutionLogAndTrackingId(String stopResponderId, CompositeExecutionLog log) {
+				System.err.println(log);
+			}
+
+			@Override
+			public void newTestStarted(TestPage arg0, TimeMeasurement arg1) throws IOException {
+
+			}
+
+			@Override
+			public void errorOccured() {
+
+			}
+
+			@Override
+			public void announceNumberTestsToRun(int arg0) {
+
+			}
+
+			@Override
+			public void allTestingComplete(TimeMeasurement arg0) throws IOException {
+			}
+		};
 	}
 
 	@Override

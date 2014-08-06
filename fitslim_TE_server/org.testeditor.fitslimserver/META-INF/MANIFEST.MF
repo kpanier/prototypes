@@ -6,9 +6,10 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.testeditor.core;bundle-version="1.5.4",
  org.eclipse.core.runtime;bundle-version="3.9.100",
- org.apache.log4j;bundle-version="1.2.15",
- org.eclipse.equinox.ds;bundle-version="1.4.101"
-Bundle-ClassPath: lib/fitnesse-standalone.jar,
- .
+ org.eclipse.equinox.ds;bundle-version="1.4.101",
+ org.junit;bundle-version="4.11.0",
+ org.apache.log4j;bundle-version="1.2.15"
+Bundle-ClassPath: .,
+ lib/TestEditorFixtureSWT-1.5.4-SNAPSHOT-jar-with-dependencies.jar
 Service-Component: OSGI-INF/teststructureservice.xml
 Bundle-ActivationPolicy: lazy
