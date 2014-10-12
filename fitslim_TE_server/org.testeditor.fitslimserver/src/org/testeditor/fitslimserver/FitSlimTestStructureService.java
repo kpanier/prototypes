@@ -14,6 +14,7 @@ package org.testeditor.fitslimserver;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,26 +29,24 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.testeditor.core.exceptions.SystemException;
 import org.testeditor.core.model.testresult.TestResult;
+import org.testeditor.core.model.teststructure.ScenarioSuite;
 import org.testeditor.core.model.teststructure.TestCase;
 import org.testeditor.core.model.teststructure.TestCompositeStructure;
+import org.testeditor.core.model.teststructure.TestScenario;
 import org.testeditor.core.model.teststructure.TestStructure;
 import org.testeditor.core.model.teststructure.TestSuite;
+import org.testeditor.core.services.interfaces.TestEditorGlobalConstans;
+import org.testeditor.core.services.interfaces.TestServerService;
 import org.testeditor.core.services.interfaces.TestStructureService;
+import org.testeditor.fitnesse.util.FitNesseRestClient;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import util.TimeMeasurement;
-import fitnesse.junit.JUnitHelper;
-import fitnesse.responders.run.CompositeExecutionLog;
-import fitnesse.responders.run.ResultsListener;
-import fitnesse.responders.run.TestPage;
-import fitnesse.responders.run.TestSummary;
-import fitnesse.responders.run.TestSystem;
-
 public class FitSlimTestStructureService implements TestStructureService {
 
 	private static final Logger LOGGER = Logger.getLogger(FitSlimTestStructureService.class);
+	private TestServerService testServerService;
 
 	@Override
 	public void loadTestStructuresChildrenFor(TestCompositeStructure testCompositeStructure) throws SystemException {
@@ -86,24 +85,37 @@ public class FitSlimTestStructureService implements TestStructureService {
 		try {
 			DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document document = documentBuilder.parse(propertyFile);
+			boolean isSuites = false;
 			if (document.getFirstChild().getNodeName().equals("properties")) {
 				NodeList nodeList = document.getFirstChild().getChildNodes();
 				for (int i = 0; i < nodeList.getLength(); i++) {
-					System.out.println();
 					if (nodeList.item(i).getNodeName().equals("Test")) {
 						result = new TestCase();
 						break;
 					}
 					if (nodeList.item(i).getNodeName().equals("Suite")) {
 						result = new TestSuite();
-						((TestSuite) result)
-								.setChildCount(propertyFile.getParentFile().listFiles(getDirectoryFilter()).length);
-						((TestSuite) result).setLazyLoader(getTestProjectLazyLoader((TestCompositeStructure) result));
 						break;
 					}
+					if (nodeList.item(i).getNodeName().equals("Suites")) {
+						isSuites = true;
+					}
 				}
-				if (result != null) {
-					result.setName(propertyFile.getParentFile().getName());
+				String testStructureName = propertyFile.getParentFile().getName();
+				if (result == null) {
+					if (isSuites || testStructureName.equalsIgnoreCase(TestEditorGlobalConstans.TEST_SCENARIO_SUITE)
+							|| testStructureName.equalsIgnoreCase(TestEditorGlobalConstans.TEST_KOMPONENTS)) {
+						result = new ScenarioSuite();
+					} else {
+						result = new TestScenario();
+					}
+				}
+				result.setName(testStructureName);
+				if (result instanceof TestCompositeStructure) {
+					((TestCompositeStructure) result).setChildCount(propertyFile.getParentFile().listFiles(
+							getDirectoryFilter()).length);
+					((TestCompositeStructure) result)
+							.setLazyLoader(getTestProjectLazyLoader((TestCompositeStructure) result));
 				}
 			}
 		} catch (ParserConfigurationException | SAXException | IOException e) {
@@ -157,20 +169,25 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public TestResult executeTestStructure(TestStructure testStructure, IProgressMonitor monitor)
 			throws SystemException, InterruptedException {
+		TestResult testResult = null;
 		try {
-
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(JUnitHelper.class.getClassLoader());
-			// System.getProperty("java.io.tmpdir")
-			JUnitHelper jUnitHelper = new JUnitHelper(getPathToProject(testStructure), "/home/karsten/dummy/tmp",
-					getResultListener());
-			jUnitHelper.setPort(8898);
-			jUnitHelper.assertTestPasses(testStructure.getFullName());
-			Thread.currentThread().setContextClassLoader(classLoader);
-		} catch (Exception e) {
-			LOGGER.error("Executing TestStructure: " + testStructure, e);
+			testServerService.startTestServer(testStructure.getRootElement());
+		} catch (IOException | URISyntaxException e) {
+			LOGGER.error("Error starting TestServer for teststructrue: " + testStructure, e);
+			throw new SystemException("Error starting TestServer for teststructrue: " + testStructure + "\n"
+					+ e.getMessage(), e);
 		}
-		return null;
+
+		testResult = new FitNesseRestClient().execute(testStructure, monitor);
+
+		try {
+			testServerService.stopTestServer(testStructure.getRootElement());
+		} catch (IOException e) {
+			LOGGER.error("Error stopping TestServer for teststructrue: " + testStructure, e);
+			throw new SystemException("Error stopping TestServer for teststructrue: " + testStructure + "\n"
+					+ e.getMessage(), e);
+		}
+		return testResult;
 	}
 
 	public String getPathToProject(TestStructure testStructure) {
@@ -178,53 +195,6 @@ public class FitSlimTestStructureService implements TestStructureService {
 		sb.append(Platform.getLocation().toFile().toPath().toString()).append(File.separator)
 				.append(testStructure.getRootElement().getName());
 		return sb.toString();
-	}
-
-	private ResultsListener getResultListener() {
-		return new ResultsListener() {
-
-			@Override
-			public void testSystemStarted(TestSystem testSystem, String testSystemName, String testRunner) {
-				System.err
-						.println("FitSlimTestStructureService.getResultListener().new ResultsListener() {...}.testSystemStarted(): "
-								+ testRunner);
-			}
-
-			@Override
-			public void testOutputChunk(String output) throws IOException {
-				System.err.println(">>>>>> Chunk: " + output);
-			}
-
-			@Override
-			public void testComplete(TestPage test, TestSummary testSummary, TimeMeasurement timeMeasurement)
-					throws IOException {
-				System.err.println("+++++ Testconmpletet: " + test);
-			}
-
-			@Override
-			public void setExecutionLogAndTrackingId(String stopResponderId, CompositeExecutionLog log) {
-				System.err.println(log);
-			}
-
-			@Override
-			public void newTestStarted(TestPage arg0, TimeMeasurement arg1) throws IOException {
-
-			}
-
-			@Override
-			public void errorOccured() {
-
-			}
-
-			@Override
-			public void announceNumberTestsToRun(int arg0) {
-
-			}
-
-			@Override
-			public void allTestingComplete(TimeMeasurement arg0) throws IOException {
-			}
-		};
 	}
 
 	@Override
@@ -285,4 +255,33 @@ public class FitSlimTestStructureService implements TestStructureService {
 	public String getId() {
 		return FitSlimTestServerConstants.PLUGIN_ID;
 	}
+
+	@Override
+	public boolean hasTestExecutionReport() {
+		return false;
+	}
+
+	/**
+	 * Binds the osgi service <code>TestServerService</code> to this service.
+	 * The service is used to launch the TestServer for execution.
+	 * 
+	 * @param testServerService
+	 *            to be bind.
+	 */
+	public void bind(TestServerService testServerService) {
+		LOGGER.info("Binding " + testServerService);
+		this.testServerService = testServerService;
+	}
+
+	/**
+	 * Removes the osgi service <code>TestServerService</code> from this
+	 * service.
+	 * 
+	 * @param testServerService
+	 *            is ignored.
+	 */
+	public void unBind(TestServerService testServerService) {
+		this.testServerService = null;
+	}
+
 }

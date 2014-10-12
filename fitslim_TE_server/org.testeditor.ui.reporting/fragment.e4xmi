@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmi:id="_ENpFEACTEeSkCYMO2A7Qnw">
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_hEkI4ACaEeSkCYMO2A7Qnw" featurename="children" parentElementId="org.testeditor.ui.partstack.testhistory">
+    <elements xsi:type="basic:Part" xmi:id="_dABjsC9xEeSiirKH6P_m0A" elementId="org.testeditor.ui.reporting.executionResults" contributionURI="bundleclass://org.testeditor.ui.reporting/org.testeditor.ui.reporting.TestExecutionReportView" label="Test Execution"/>
+  </fragments>
+</fragment:ModelFragments>

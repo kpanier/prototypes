@@ -30,7 +30,7 @@ import org.testeditor.core.services.interfaces.TestStructureService;
 /**
  * 
  * Tests for the Fit and Slim based Implementation of the TestStructureService.
- *
+ * 
  */
 public class FitSlimTestStructureServiceTest {
 
@@ -47,6 +47,12 @@ public class FitSlimTestStructureServiceTest {
 		assertTrue(testStructureService instanceof FitSlimTestStructureService);
 	}
 
+	/**
+	 * Tests the correct reading of the teststructure type testcase.
+	 * 
+	 * @throws Exception
+	 *             on test failure
+	 */
 	@Test
 	public void testCreateTestStructureFromTestCaseProperties() throws Exception {
 		FitSlimTestStructureService service = new FitSlimTestStructureService();
@@ -59,6 +65,12 @@ public class FitSlimTestStructureServiceTest {
 		assertTrue(testStructure instanceof TestCase);
 	}
 
+	/**
+	 * Tests the correct reading of the teststructure type testsuite.
+	 * 
+	 * @throws Exception
+	 *             on test failure
+	 */
 	@Test
 	public void testCreateTestStructureFromTestSuiteProperties() throws Exception {
 		FitSlimTestStructureService service = new FitSlimTestStructureService();
