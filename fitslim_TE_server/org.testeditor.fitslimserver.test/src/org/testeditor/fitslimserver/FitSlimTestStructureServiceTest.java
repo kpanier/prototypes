@@ -12,8 +12,10 @@
 package org.testeditor.fitslimserver;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.junit.After;
 import org.junit.Test;
+import org.testeditor.core.exceptions.SystemException;
 import org.testeditor.core.model.teststructure.ScenarioSuite;
 import org.testeditor.core.model.teststructure.TestCase;
 import org.testeditor.core.model.teststructure.TestCompositeStructure;
@@ -143,7 +146,7 @@ public class FitSlimTestStructureServiceTest {
 	 * Test the loading of the sub testcases of a teststructurecomposite.
 	 * 
 	 * @throws Exception
-	 *             on Testfailure.
+	 *             on Test failure.
 	 */
 	@Test
 	public void testLoadTestStructuresChildrenFor() throws Exception {
@@ -151,6 +154,249 @@ public class FitSlimTestStructureServiceTest {
 		FitSlimTestStructureService service = new FitSlimTestStructureService();
 		service.loadTestStructuresChildrenFor(testProject);
 		assertEquals(2, testProject.getTestChildren().size());
+	}
+
+	/**
+	 * Test the Remove of a Testcase from the filesystem. It checks fist that
+	 * there is a testcase in the file system. After removing the file entry is
+	 * also away.
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testRemoveTestStructure() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		assertTrue("Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString() + "/tp/FitNesseRoot/tp/tc")));
+		service.removeTestStructure(testProject.getTestChildByFullName("tp.tc"));
+		assertFalse("Directory of Testcase is removed.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString() + "/tp/FitNesseRoot/tp/tc")));
+	}
+
+	/**
+	 * Tests the Adding of a TestCase to an existing TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddTestCaseToTestProject() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestCase tc = new TestCase();
+		tc.setName("MyTestCase");
+		testProject.addChild(tc);
+		service.createTestStructure(tc);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/MyTestCase")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/MyTestCase/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/MyTestCase/properties.xml"))).contains("<Test/>"));
+	}
+
+	/**
+	 * Tests Exception on adding of a allready existing TestCase to an existing
+	 * TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddDuplicateTestCaseToTestProject() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestCase tc = new TestCase();
+		tc.setName("tc");
+		testProject.addChild(tc);
+		try {
+			service.createTestStructure(tc);
+			fail("Exception expected.");
+		} catch (SystemException e) {
+			assertTrue(e.getMessage().contains("TestStructure allready exits"));
+		}
+	}
+
+	/**
+	 * Tests the Adding of a TestCase to an existing TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddTestCaseToTestSuite() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestCase tc = new TestCase();
+		tc.setName("MyTestCase");
+		TestStructure structure = testProject.getTestChildByFullName("tp.ts");
+		((TestCompositeStructure) structure).addChild(tc);
+		service.createTestStructure(tc);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ts/MyTestCase")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ts/MyTestCase/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/ts/MyTestCase/properties.xml"))).contains("<Test/>"));
+	}
+
+	/**
+	 * Tests the Adding of a TestSuite to an existing TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddTestStuiteToTestProject() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestSuite ts = new TestSuite();
+		ts.setName("CiSuite");
+		testProject.addChild(ts);
+		service.createTestStructure(ts);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/CiSuite")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/CiSuite/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/CiSuite/properties.xml"))).contains("<Suite/>"));
+	}
+
+	/**
+	 * Tests the Adding of a TestScenario to an existing TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddTestScenarioToTestProject() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestScenario tsc = new TestScenario();
+		tsc.setName("Scenario");
+		testProject.addChild(tsc);
+		service.createTestStructure(tsc);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/Scenario")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/Scenario/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/Scenario/properties.xml"))).contains("<TESTSCENARIO/>"));
+	}
+
+	/**
+	 * Tests the Adding of a ScenarioSuite to an existing TestProject
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddScenarioSuiteToTestProject() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		ScenarioSuite scs = new ScenarioSuite();
+		scs.setName("ScenarioSuite");
+		testProject.addChild(scs);
+		service.createTestStructure(scs);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/ScenarioSuite/properties.xml"))).contains("<Suites/>"));
+	}
+
+	/**
+	 * Tests the Adding of a TestScenario to an existing ScenarioSuite
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testAddTestScenarioToScenarioSuite() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		ScenarioSuite scs = new ScenarioSuite();
+		scs.setName("ScenarioSuite");
+		testProject.addChild(scs);
+		service.createTestStructure(scs);
+		TestScenario tsc = new TestScenario();
+		tsc.setName("Scenario");
+		scs.addChild(tsc);
+		service.createTestStructure(tsc);
+		assertTrue(
+				"Directory of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite/Scenario")));
+		assertTrue(
+				"Properties of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite/Scenario/properties.xml")));
+		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/tp/ScenarioSuite/Scenario/properties.xml"))).contains("<TESTSCENARIO/>"));
+	}
+
+	/**
+	 * Integrationtest to add and load a TestTRee.
+	 * 
+	 * @throws Exception
+	 *             on Test failure.
+	 */
+	@Test
+	public void testIntegrationOfAddAndReloadOfTestStructures() throws Exception {
+		TestProject testProject = createTestProjectsInWS();
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestSuite suite = new TestSuite();
+		suite.setName("MySuite");
+		TestCase tc1 = new TestCase();
+		tc1.setName("MyTest");
+		suite.addChild(tc1);
+		testProject.addChild(suite);
+		TestCase tc2 = new TestCase();
+		tc2.setName("SecondTest");
+		testProject.addChild(tc2);
+		service.createTestStructure(tc2);
+		service.createTestStructure(suite);
+		service.createTestStructure(tc1);
+		TestProject tp = new TestProject();
+		tp.setName("tp");
+		service.loadTestStructuresChildrenFor(tp);
+		assertTrue(tp.getAllTestChildren().contains(tc2));
+		assertTrue(tp.getAllTestChildren().contains(tc1));
+		assertTrue(tp.getAllTestChildren().contains(suite));
+	}
+
+	/**
+	 * Test the check for reserved names.
+	 */
+	@Test
+	public void testIsReservedName() {
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		assertTrue(service.isReservedName("SetUp"));
+		assertTrue(service.isReservedName("TearDown"));
+		assertFalse(service.isReservedName("MyTestCase"));
 	}
 
 	/**
@@ -186,8 +432,14 @@ public class FitSlimTestStructureServiceTest {
 		Files.copy(this.getClass().getResourceAsStream("ts_properties.xml"), Paths.get(Platform.getLocation().toFile()
 				.toPath().toString()
 				+ "/tp/FitNesseRoot/tp/ts/properties.xml"));
+		TestSuite ts = new TestSuite();
+		ts.setName("ts");
+		result.addChild(ts);
 		Files.createDirectories(Paths.get(Platform.getLocation().toFile().toPath().toString()
 				+ "/tp/FitNesseRoot/tp/tc"));
+		TestCase testCase = new TestCase();
+		testCase.setName("tc");
+		result.addChild(testCase);
 		Files.copy(this.getClass().getResourceAsStream("tc_properties.xml"), Paths.get(Platform.getLocation().toFile()
 				.toPath().toString()
 				+ "/tp/FitNesseRoot/tp/tc/properties.xml"));

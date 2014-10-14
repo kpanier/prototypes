@@ -15,14 +15,24 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -40,6 +50,8 @@ import org.testeditor.core.services.interfaces.TestServerService;
 import org.testeditor.core.services.interfaces.TestStructureService;
 import org.testeditor.fitnesse.util.FitNesseRestClient;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -150,14 +162,83 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void createTestStructure(TestStructure testStructure) throws SystemException {
-		// TODO Auto-generated method stub
+		Path pathToTestStructure = Paths.get(getPathTo(testStructure));
+		if (Files.exists(pathToTestStructure)) {
+			throw new SystemException("TestStructure allready exits");
+		}
+		try {
+			Files.createDirectories(pathToTestStructure);
 
+			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+			Document doc = docBuilder.newDocument();
+			Element props = doc.createElement("properties");
+			doc.appendChild(props);
+			props.appendChild(createTrueElement(doc, "Edit"));
+			props.appendChild(createTrueElement(doc, "Files"));
+			props.appendChild(createTrueElement(doc, "Properties"));
+			props.appendChild(createTrueElement(doc, "RecentChanges"));
+			props.appendChild(createTrueElement(doc, "Refactor"));
+			props.appendChild(createTrueElement(doc, "Search"));
+			props.appendChild(createTrueElement(doc, "Versions"));
+			props.appendChild(createTrueElement(doc, "WhereUsed"));
+
+			String type = testStructure.getPageType();
+			if (type.equals(new ScenarioSuite().getPageType())) {
+				type = "Suites";
+			}
+			props.appendChild(doc.createElement(type));
+
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(new File(pathToTestStructure + File.separator + "properties.xml"));
+
+			transformer.transform(source, result);
+
+		} catch (IOException | ParserConfigurationException | TransformerException e) {
+			LOGGER.error("Error creating teststructrue in filesystem", e);
+			throw new SystemException(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Creates XML Nodes with a True TextNode as child of the node.
+	 * 
+	 * @param doc
+	 *            used for creation.
+	 * @param name
+	 *            of the new node
+	 * @return a new node.
+	 */
+	private Node createTrueElement(Document doc, String name) {
+		Element element = doc.createElement(name);
+		element.appendChild(doc.createTextNode("true"));
+		return element;
 	}
 
 	@Override
 	public void removeTestStructure(TestStructure testStructure) throws SystemException {
-		// TODO Auto-generated method stub
+		try {
+			Files.walkFileTree(Paths.get(getPathTo(testStructure)), new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
+				}
 
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
+			LOGGER.trace("Deleted teststructrue: " + testStructure);
+		} catch (IOException e) {
+			LOGGER.error("Error deleting teststructrue: " + testStructure, e);
+			throw new SystemException("Error deleting teststructrue: " + testStructure + "\n" + e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -217,8 +298,28 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public boolean isReservedName(String name) {
-		// TODO Auto-generated method stub
-		return false;
+		return getSpecialPages().contains(name);
+	}
+
+	/**
+	 * FitNesse has some reserved Words for special pages. This pages are used
+	 * for example as test preparation. See:
+	 * http://fitnesse.org/FitNesse.UserGuide.SpecialPages
+	 * 
+	 * @return a Set of reserved Names in FitNesse.
+	 */
+	Set<String> getSpecialPages() {
+		Set<String> specialPages = new HashSet<String>();
+		specialPages.add("PageHeader");
+		specialPages.add("PageFooter");
+		specialPages.add("SetUp");
+		specialPages.add("TearDown");
+		specialPages.add("SuiteSetUp");
+		specialPages.add("SuiteTearDown");
+		specialPages.add("ScenarioLibrary");
+		specialPages.add("TemplateLibrary");
+		specialPages.add("Suites");
+		return specialPages;
 	}
 
 	@Override
