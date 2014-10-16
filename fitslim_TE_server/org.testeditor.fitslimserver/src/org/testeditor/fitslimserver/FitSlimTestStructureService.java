@@ -55,6 +55,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * 
+ * Fitnesse Filesystem based implementation of the TestStructureService.
+ * 
+ */
 public class FitSlimTestStructureService implements TestStructureService {
 
 	private static final Logger LOGGER = Logger.getLogger(FitSlimTestStructureService.class);
@@ -84,6 +89,13 @@ public class FitSlimTestStructureService implements TestStructureService {
 		}
 	}
 
+	/**
+	 * Creates the Path to a TestStructure in the FileSystem as a string.
+	 * 
+	 * @param testStructure
+	 *            to be used for lookup.
+	 * @return the path as string to the TestStructure.
+	 */
 	public String getPathTo(TestStructure testStructure) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getPathToProject(testStructure));
@@ -92,6 +104,19 @@ public class FitSlimTestStructureService implements TestStructureService {
 		return sb.toString();
 	}
 
+	/**
+	 * Creates an instance of a subclass of TestStructure based on the
+	 * informations in the property file. if the property file contains the
+	 * property: test it creates a TestCase. if the property file contains the
+	 * property: suite it creates a TestSuite. if the property file contains the
+	 * property: suites it creates a ScenarioSuite.
+	 * 
+	 * @param propertyFile
+	 *            FitNesse xml file with the properties of a TestPage.
+	 * @return a instance of subclass of TestStructure.
+	 * @throws SystemException
+	 *             on IOExcpetion or XML processing.
+	 */
 	protected TestStructure createTestStructureFrom(File propertyFile) throws SystemException {
 		TestStructure result = null;
 		try {
@@ -137,6 +162,10 @@ public class FitSlimTestStructureService implements TestStructureService {
 		return result;
 	}
 
+	/**
+	 * 
+	 * @return directory filter to ignore directory with . as prefix.
+	 */
 	private FilenameFilter getDirectoryFilter() {
 		return new FilenameFilter() {
 
@@ -150,6 +179,10 @@ public class FitSlimTestStructureService implements TestStructureService {
 		};
 	}
 
+	/**
+	 * 
+	 * @return Filename filter to get only properties.xml.
+	 */
 	private FilenameFilter getPropertyFiler() {
 		return new FilenameFilter() {
 
@@ -271,6 +304,13 @@ public class FitSlimTestStructureService implements TestStructureService {
 		return testResult;
 	}
 
+	/**
+	 * 
+	 * @param testStructure
+	 *            used to get the TestProcject and looks it's location in the
+	 *            filesystem.
+	 * @return path as string of the root element of the given teststructure.
+	 */
 	public String getPathToProject(TestStructure testStructure) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(Platform.getLocation().toFile().toPath().toString()).append(File.separator)
