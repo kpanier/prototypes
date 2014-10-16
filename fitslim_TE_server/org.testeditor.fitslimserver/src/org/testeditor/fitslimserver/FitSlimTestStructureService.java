@@ -201,6 +201,8 @@ public class FitSlimTestStructureService implements TestStructureService {
 		}
 		try {
 			Files.createDirectories(pathToTestStructure);
+			Files.write(Paths.get(pathToTestStructure.toString() + File.separator + "content.txt"), testStructure
+					.getSourceCode().getBytes());
 
 			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();

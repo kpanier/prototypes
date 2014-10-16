@@ -194,6 +194,10 @@ public class FitSlimTestStructureServiceTest {
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/MyTestCase")));
 		assertTrue(
+				"Content of Testcase exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/MyTestCase/content.txt")));
+		assertTrue(
 				"Properties of Testcase exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/MyTestCase/properties.xml")));
@@ -265,15 +269,21 @@ public class FitSlimTestStructureServiceTest {
 		testProject.addChild(ts);
 		service.createTestStructure(ts);
 		assertTrue(
-				"Directory of Testcase exists.",
+				"Directory of TestSuite exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/CiSuite")));
 		assertTrue(
-				"Properties of Testcase exists.",
+				"Content of TestSuite exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/CiSuite/content.txt")));
+		assertTrue(
+				"Properties of TestSuite exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/CiSuite/properties.xml")));
-		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
-				+ "/tp/FitNesseRoot/tp/CiSuite/properties.xml"))).contains("<Suite/>"));
+		assertTrue(
+				"Property Suite exists.",
+				new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/CiSuite/properties.xml"))).contains("<Suite/>"));
 	}
 
 	/**
@@ -291,15 +301,21 @@ public class FitSlimTestStructureServiceTest {
 		testProject.addChild(tsc);
 		service.createTestStructure(tsc);
 		assertTrue(
-				"Directory of Testcase exists.",
+				"Directory of TestScenario exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/Scenario")));
 		assertTrue(
-				"Properties of Testcase exists.",
+				"Content of TestScenario exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/Scenario/content.txt")));
+		assertTrue(
+				"Properties of TestScenario exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/Scenario/properties.xml")));
-		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
-				+ "/tp/FitNesseRoot/tp/Scenario/properties.xml"))).contains("<TESTSCENARIO/>"));
+		assertTrue(
+				"Peroperty is Testscenario",
+				new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/Scenario/properties.xml"))).contains("<TESTSCENARIO/>"));
 	}
 
 	/**
@@ -317,15 +333,21 @@ public class FitSlimTestStructureServiceTest {
 		testProject.addChild(scs);
 		service.createTestStructure(scs);
 		assertTrue(
-				"Directory of Testcase exists.",
+				"Directory of ScenarioSuite exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/ScenarioSuite")));
 		assertTrue(
-				"Properties of Testcase exists.",
+				"Content of ScenarioSuite exists.",
+				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite/content.txt")));
+		assertTrue(
+				"Properties of ScenarioSuite exists.",
 				Files.exists(Paths.get(Platform.getLocation().toFile().toPath().toString()
 						+ "/tp/FitNesseRoot/tp/ScenarioSuite/properties.xml")));
-		assertTrue(new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
-				+ "/tp/FitNesseRoot/tp/ScenarioSuite/properties.xml"))).contains("<Suites/>"));
+		assertTrue(
+				"Property Suites exitsts.",
+				new String(Files.readAllBytes(Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/tp/ScenarioSuite/properties.xml"))).contains("<Suites/>"));
 	}
 
 	/**
