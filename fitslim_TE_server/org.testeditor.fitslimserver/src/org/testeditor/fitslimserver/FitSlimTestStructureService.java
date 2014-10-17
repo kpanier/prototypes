@@ -322,8 +322,15 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public String getTestStructureAsText(TestStructure testStructure) throws SystemException {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			Path pathToTestStructure = Paths.get(getPathTo(testStructure));
+			return new String(Files.readAllBytes(Paths.get(pathToTestStructure.toString() + File.separator
+					+ "content.txt")));
+		} catch (IOException e) {
+			LOGGER.error("Error reading content of teststructrue: " + testStructure, e);
+			throw new SystemException("Error reading content of teststructrue: " + testStructure + "\n"
+					+ e.getMessage(), e);
+		}
 	}
 
 	@Override

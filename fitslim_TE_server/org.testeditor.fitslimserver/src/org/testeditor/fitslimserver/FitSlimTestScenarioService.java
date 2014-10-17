@@ -26,6 +26,10 @@ import org.testeditor.core.services.interfaces.TestScenarioService;
 import org.testeditor.core.services.interfaces.TestStructureContentService;
 import org.testeditor.core.services.interfaces.TestStructureService;
 
+/**
+ * TestScenarioService implemantation for the Fitnesse Slim Filesystem backend.
+ * 
+ */
 public class FitSlimTestScenarioService implements TestScenarioService {
 
 	private static final Logger LOGGER = Logger.getLogger(FitSlimTestScenarioService.class);
@@ -148,6 +152,11 @@ public class FitSlimTestScenarioService implements TestScenarioService {
 			this.testStructureContentService = null;
 			LOGGER.info("Unbind TestStructureContentService");
 		}
+	}
+
+	@Override
+	public String getId() {
+		return FitSlimTestServerConstants.PLUGIN_ID;
 	}
 
 }

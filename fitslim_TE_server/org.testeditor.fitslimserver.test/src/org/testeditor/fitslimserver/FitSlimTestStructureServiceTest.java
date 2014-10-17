@@ -50,6 +50,8 @@ import org.testeditor.core.services.interfaces.TestStructureService;
  */
 public class FitSlimTestStructureServiceTest {
 
+	private static final String TEST_TEXT = "MyTest Content";
+
 	/**
 	 * Tests the registration of the FitSlim based implementation at the
 	 * PluginServcie.
@@ -422,6 +424,20 @@ public class FitSlimTestStructureServiceTest {
 	}
 
 	/**
+	 * Test the loading of the text content of a teststructure.
+	 * 
+	 * @throws Exception
+	 *             on loading tests.
+	 */
+	@Test
+	public void testGetTestStructureAsText() throws Exception {
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestProject testProject = createTestProjectsInWS();
+		TestStructure structure = testProject.getTestChildByFullName("tp.tc");
+		assertEquals(TEST_TEXT, service.getTestStructureAsText(structure));
+	}
+
+	/**
 	 * Tests receiving a runnable.
 	 * 
 	 * @throws Exception
@@ -459,6 +475,9 @@ public class FitSlimTestStructureServiceTest {
 		result.addChild(ts);
 		Files.createDirectories(Paths.get(Platform.getLocation().toFile().toPath().toString()
 				+ "/tp/FitNesseRoot/tp/tc"));
+		Files.write(
+				Paths.get(Platform.getLocation().toFile().toPath().toString() + "/tp/FitNesseRoot/tp/tc/content.txt"),
+				TEST_TEXT.getBytes());
 		TestCase testCase = new TestCase();
 		testCase.setName("tc");
 		result.addChild(testCase);
