@@ -26,12 +26,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.junit.After;
 import org.junit.Test;
 import org.testeditor.core.exceptions.SystemException;
+import org.testeditor.core.model.testresult.TestResult;
 import org.testeditor.core.model.teststructure.ScenarioSuite;
 import org.testeditor.core.model.teststructure.TestCase;
 import org.testeditor.core.model.teststructure.TestCompositeStructure;
@@ -141,7 +143,24 @@ public class FitSlimTestStructureServiceTest {
 		testSuite.addChild(testStructure);
 		String pathPart = File.separator + "FitNesseRoot" + File.separator + "MyTestPrj" + File.separator + "MySuite"
 				+ File.separator + "ATestCase";
-		assertTrue("Path ends with", service.getPathTo(testStructure).endsWith(pathPart));
+		assertTrue("Path ends with", service.getPathToTestStructureDirectory(testStructure).endsWith(pathPart));
+	}
+
+	/**
+	 * Tests the lookup of the Path to the TestResults of a given TestStructure.
+	 */
+	@Test
+	public void testGetPathToTestResults() {
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestProject testProject = new TestProject();
+		testProject.setName("TestPrj");
+		TestCase tc = new TestCase();
+		tc.setName("TesCa");
+		testProject.addChild(tc);
+		String pathToTestResults = service.getPathToTestResults(tc);
+		String pathPart = File.separator + "FitNesseRoot" + File.separator + "files" + File.separator + "testResults"
+				+ File.separator + "TestPrj.TesCa";
+		assertTrue("Path ends with", pathToTestResults.endsWith(pathPart));
 	}
 
 	/**
@@ -438,6 +457,21 @@ public class FitSlimTestStructureServiceTest {
 	}
 
 	/**
+	 * Test the loading of the test execution history of a teststructure.
+	 * 
+	 * @throws Exception
+	 *             on loading tests.
+	 */
+	@Test
+	public void testGetTestHistory() throws Exception {
+		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		TestProject testProject = createTestProjectsInWS();
+		List<TestResult> testHistory = service.getTestHistory(testProject.getTestChildByFullName("tp.tc"));
+		assertNotNull(testHistory);
+		assertEquals(2, testHistory.size());
+	}
+
+	/**
 	 * Tests receiving a runnable.
 	 * 
 	 * @throws Exception
@@ -478,6 +512,16 @@ public class FitSlimTestStructureServiceTest {
 		Files.write(
 				Paths.get(Platform.getLocation().toFile().toPath().toString() + "/tp/FitNesseRoot/tp/tc/content.txt"),
 				TEST_TEXT.getBytes());
+		Files.createDirectories(Paths.get(Platform.getLocation().toFile().toPath().toString()
+				+ "/tp/FitNesseRoot/files/testResults/tp.tc"));
+		Files.copy(
+				this.getClass().getResourceAsStream("20141017221315_3_0_0_0.xml"),
+				Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/files/testResults/tp.tc/20141017221315_3_0_0_0.xml"));
+		Files.copy(
+				this.getClass().getResourceAsStream("20141018135503_3_0_0_0.xml"),
+				Paths.get(Platform.getLocation().toFile().toPath().toString()
+						+ "/tp/FitNesseRoot/files/testResults/tp.tc/20141018135503_3_0_0_0.xml"));
 		TestCase testCase = new TestCase();
 		testCase.setName("tc");
 		result.addChild(testCase);

@@ -12,15 +12,20 @@
 package org.testeditor.fitslimserver;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,9 +50,12 @@ import org.testeditor.core.model.teststructure.TestCompositeStructure;
 import org.testeditor.core.model.teststructure.TestScenario;
 import org.testeditor.core.model.teststructure.TestStructure;
 import org.testeditor.core.model.teststructure.TestSuite;
+import org.testeditor.core.model.teststructure.TestType;
 import org.testeditor.core.services.interfaces.TestEditorGlobalConstans;
 import org.testeditor.core.services.interfaces.TestServerService;
 import org.testeditor.core.services.interfaces.TestStructureService;
+import org.testeditor.fitnesse.resultreader.FitNesseResultReader;
+import org.testeditor.fitnesse.resultreader.FitNesseResultReaderFactory;
 import org.testeditor.fitnesse.util.FitNesseRestClient;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -67,7 +75,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void loadTestStructuresChildrenFor(TestCompositeStructure testCompositeStructure) throws SystemException {
-		Path path = Paths.get(getPathTo(testCompositeStructure));
+		Path path = Paths.get(getPathToTestStructureDirectory(testCompositeStructure));
 		try {
 			for (Path file : Files.newDirectoryStream(path)) {
 				if (file.toFile().isDirectory()) {
@@ -90,17 +98,34 @@ public class FitSlimTestStructureService implements TestStructureService {
 	}
 
 	/**
-	 * Creates the Path to a TestStructure in the FileSystem as a string.
+	 * Creates the Path to the Directory of the TestStructure in the FileSystem
+	 * as a string.
 	 * 
 	 * @param testStructure
 	 *            to be used for lookup.
 	 * @return the path as string to the TestStructure.
 	 */
-	public String getPathTo(TestStructure testStructure) {
+	public String getPathToTestStructureDirectory(TestStructure testStructure) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getPathToProject(testStructure));
 		String pathInProject = testStructure.getFullName().replaceAll("\\.", File.separator);
 		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append(pathInProject);
+		return sb.toString();
+	}
+
+	/**
+	 * Creates the Path to the Directory of the TestResults of the given
+	 * TestStructure in the FileSystem as a string.
+	 * 
+	 * @param testStructure
+	 *            to be used for lookup.
+	 * @return the path as string to the TestResults.
+	 */
+	public String getPathToTestResults(TestStructure testStructure) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getPathToProject(testStructure));
+		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append("files").append(File.separator)
+				.append("testResults").append(File.separator).append(testStructure.getFullName());
 		return sb.toString();
 	}
 
@@ -195,7 +220,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void createTestStructure(TestStructure testStructure) throws SystemException {
-		Path pathToTestStructure = Paths.get(getPathTo(testStructure));
+		Path pathToTestStructure = Paths.get(getPathToTestStructureDirectory(testStructure));
 		if (Files.exists(pathToTestStructure)) {
 			throw new SystemException("TestStructure allready exits");
 		}
@@ -255,20 +280,21 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public void removeTestStructure(TestStructure testStructure) throws SystemException {
 		try {
-			Files.walkFileTree(Paths.get(getPathTo(testStructure)), new SimpleFileVisitor<Path>() {
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					Files.delete(file);
-					return FileVisitResult.CONTINUE;
-				}
+			Files.walkFileTree(Paths.get(getPathToTestStructureDirectory(testStructure)),
+					new SimpleFileVisitor<Path>() {
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+							Files.delete(file);
+							return FileVisitResult.CONTINUE;
+						}
 
-				@Override
-				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-					Files.delete(dir);
-					return FileVisitResult.CONTINUE;
-				}
+						@Override
+						public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+							Files.delete(dir);
+							return FileVisitResult.CONTINUE;
+						}
 
-			});
+					});
 			LOGGER.trace("Deleted teststructrue: " + testStructure);
 		} catch (IOException e) {
 			LOGGER.error("Error deleting teststructrue: " + testStructure, e);
@@ -323,7 +349,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public String getTestStructureAsText(TestStructure testStructure) throws SystemException {
 		try {
-			Path pathToTestStructure = Paths.get(getPathTo(testStructure));
+			Path pathToTestStructure = Paths.get(getPathToTestStructureDirectory(testStructure));
 			return new String(Files.readAllBytes(Paths.get(pathToTestStructure.toString() + File.separator
 					+ "content.txt")));
 		} catch (IOException e) {
@@ -341,8 +367,23 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public List<TestResult> getTestHistory(TestStructure testStructure) throws SystemException {
-		// TODO Auto-generated method stub
-		return null;
+		List<TestResult> result = new ArrayList<TestResult>();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+		try {
+			DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getPathToTestResults(testStructure)));
+			for (Path path : stream) {
+				FitNesseResultReader reader = FitNesseResultReaderFactory.getReader(TestType.valueOf(testStructure
+						.getPageType().toUpperCase()));
+				TestResult testResult = reader.readTestResult(new FileInputStream(path.toFile()));
+				testResult.setResultDate(sdf.parse(path.getFileName().toString().substring(0, 11)));
+				result.add(testResult);
+			}
+		} catch (IOException | ParseException e) {
+			LOGGER.error("Error reading testresults of teststructrue: " + testStructure, e);
+			throw new SystemException("Error reading testresults of teststructrue: " + testStructure + "\n"
+					+ e.getMessage(), e);
+		}
+		return result;
 	}
 
 	@Override
@@ -357,7 +398,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 	 * 
 	 * @return a Set of reserved Names in FitNesse.
 	 */
-	Set<String> getSpecialPages() {
+	private Set<String> getSpecialPages() {
 		Set<String> specialPages = new HashSet<String>();
 		specialPages.add("PageHeader");
 		specialPages.add("PageFooter");

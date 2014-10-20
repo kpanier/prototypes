@@ -56,7 +56,8 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 	private String loadTestStructureContentFromFile(TestStructure testStructure) throws SystemException {
 		String result = null;
 		FitSlimTestStructureService structureService = new FitSlimTestStructureService();
-		Path path = Paths.get(structureService.getPathTo(testStructure) + File.separator + "content.txt");
+		Path path = Paths.get(structureService.getPathToTestStructureDirectory(testStructure) + File.separator
+				+ "content.txt");
 		try {
 			result = new String(Files.readAllBytes(path));
 		} catch (IOException e) {
@@ -70,7 +71,8 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 	@Override
 	public void saveTestStructureData(TestStructure testStructure) throws SystemException {
 		FitSlimTestStructureService structureService = new FitSlimTestStructureService();
-		Path path = Paths.get(structureService.getPathTo(testStructure) + File.separator + "content.txt");
+		Path path = Paths.get(structureService.getPathToTestStructureDirectory(testStructure) + File.separator
+				+ "content.txt");
 		try {
 			Files.write(path, testStructure.getSourceCode().getBytes());
 		} catch (IOException e) {
