@@ -108,7 +108,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 	public String getPathToTestStructureDirectory(TestStructure testStructure) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getPathToProject(testStructure));
-		String pathInProject = testStructure.getFullName().replaceAll("\\.", File.separator);
+		String pathInProject = testStructure.getFullName().replaceAll("\\.", "/");
 		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append(pathInProject);
 		return sb.toString();
 	}
@@ -172,7 +172,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 						result = new TestScenario();
 					}
 				}
-				result.setName(testStructureName);
+				result.setName(testStructureName.trim());
 				if (result instanceof TestCompositeStructure) {
 					((TestCompositeStructure) result).setChildCount(propertyFile.getParentFile().listFiles(
 							getDirectoryFilter()).length);
@@ -368,14 +368,19 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public List<TestResult> getTestHistory(TestStructure testStructure) throws SystemException {
 		List<TestResult> result = new ArrayList<TestResult>();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 		try {
-			DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(getPathToTestResults(testStructure)));
+			Path testResultsDirOfTestStructure = Paths.get(getPathToTestResults(testStructure));
+			LOGGER.trace("Reading Testhistory from " + testResultsDirOfTestStructure);
+			DirectoryStream<Path> stream = Files.newDirectoryStream(testResultsDirOfTestStructure);
 			for (Path path : stream) {
 				FitNesseResultReader reader = FitNesseResultReaderFactory.getReader(TestType.valueOf(testStructure
 						.getPageType().toUpperCase()));
 				TestResult testResult = reader.readTestResult(new FileInputStream(path.toFile()));
-				testResult.setResultDate(sdf.parse(path.getFileName().toString().substring(0, 11)));
+				String timestampString = path.getFileName().toString().substring(0, 14);
+				LOGGER.trace("Reading Testhistory with Timestamp " + timestampString);
+				testResult.setResultDate(sdf.parse(timestampString));
+				testResult.setFullName(testStructure.getFullName());
 				result.add(testResult);
 			}
 		} catch (IOException | ParseException e) {
@@ -434,7 +439,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 				try {
 					loadTestStructuresChildrenFor(toBeLoadedLazy);
 				} catch (SystemException e) {
-					LOGGER.error(e.getMessage());
+					LOGGER.error(e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 			}

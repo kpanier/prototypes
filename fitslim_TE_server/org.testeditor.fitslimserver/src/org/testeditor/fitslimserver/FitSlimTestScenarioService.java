@@ -38,8 +38,9 @@ public class FitSlimTestScenarioService implements TestScenarioService {
 
 	@Override
 	public boolean isLinkToScenario(TestProject testProject, String linkToFile) throws SystemException {
-		// TODO Auto-generated method stub
-		return false;
+		// TODO Using Filesystem to check if a teststructure with this name
+		// exists. This is faster than scanning the whole project.
+		return testProject.getTestChildByFullName(linkToFile.trim()) instanceof TestScenario;
 	}
 
 	@Override
@@ -74,7 +75,7 @@ public class FitSlimTestScenarioService implements TestScenarioService {
 	 */
 	private TestScenario findTestStructureInOffspringOfProject(String includeOfScenario, TestCompositeStructure parent)
 			throws SystemException {
-		TestScenario testScenario = (TestScenario) parent.getTestChildByFullName(includeOfScenario);
+		TestScenario testScenario = (TestScenario) parent.getTestChildByFullName(includeOfScenario.trim());
 		if (testScenario.getTestComponents().isEmpty()) {
 			readTestScenario(testScenario, testStructureService.getTestStructureAsText(testScenario));
 		}
