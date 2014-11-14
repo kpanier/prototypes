@@ -182,7 +182,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 				if (name.startsWith(".")) {
 					return false;
 				}
-				return dir.isDirectory();
+				return new File(dir.getAbsoluteFile() + File.separator + name).isDirectory();
 			}
 		};
 	}
