@@ -143,7 +143,8 @@ public class FitSlimTestStructureServiceTest {
 		testSuite.addChild(testStructure);
 		String pathPart = File.separator + "FitNesseRoot" + File.separator + "MyTestPrj" + File.separator + "MySuite"
 				+ File.separator + "ATestCase";
-		assertTrue("Path ends with", service.getPathToTestStructureDirectory(testStructure).endsWith(pathPart));
+		assertTrue("Path ends with",
+				FitSlimFileSystemUtility.getPathToTestStructureDirectory(testStructure).endsWith(pathPart));
 	}
 
 	/**
@@ -450,10 +451,10 @@ public class FitSlimTestStructureServiceTest {
 	 */
 	@Test
 	public void testGetTestStructureAsText() throws Exception {
-		FitSlimTestStructureService service = new FitSlimTestStructureService();
+		FitSlimTestStructureContentService service = new FitSlimTestStructureContentService();
 		TestProject testProject = createTestProjectsInWS();
 		TestStructure structure = testProject.getTestChildByFullName("tp.tc");
-		assertEquals(TEST_TEXT, service.getTestStructureAsText(structure));
+		assertEquals(TEST_TEXT, service.getTestStructureAsSourceText(structure));
 	}
 
 	/**

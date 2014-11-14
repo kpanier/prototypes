@@ -41,7 +41,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.testeditor.core.exceptions.SystemException;
 import org.testeditor.core.model.testresult.TestResult;
 import org.testeditor.core.model.teststructure.ScenarioSuite;
@@ -75,7 +74,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void loadTestStructuresChildrenFor(TestCompositeStructure testCompositeStructure) throws SystemException {
-		Path path = Paths.get(getPathToTestStructureDirectory(testCompositeStructure));
+		Path path = Paths.get(FitSlimFileSystemUtility.getPathToTestStructureDirectory(testCompositeStructure));
 		try {
 			for (Path file : Files.newDirectoryStream(path)) {
 				if (file.toFile().isDirectory()) {
@@ -98,22 +97,6 @@ public class FitSlimTestStructureService implements TestStructureService {
 	}
 
 	/**
-	 * Creates the Path to the Directory of the TestStructure in the FileSystem
-	 * as a string.
-	 * 
-	 * @param testStructure
-	 *            to be used for lookup.
-	 * @return the path as string to the TestStructure.
-	 */
-	public String getPathToTestStructureDirectory(TestStructure testStructure) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(getPathToProject(testStructure));
-		String pathInProject = testStructure.getFullName().replaceAll("\\.", "/");
-		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append(pathInProject);
-		return sb.toString();
-	}
-
-	/**
 	 * Creates the Path to the Directory of the TestResults of the given
 	 * TestStructure in the FileSystem as a string.
 	 * 
@@ -123,7 +106,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 	 */
 	public String getPathToTestResults(TestStructure testStructure) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getPathToProject(testStructure));
+		sb.append(FitSlimFileSystemUtility.getPathToProject(testStructure));
 		sb.append(File.separator).append("FitNesseRoot").append(File.separator).append("files").append(File.separator)
 				.append("testResults").append(File.separator).append(testStructure.getFullName());
 		return sb.toString();
@@ -174,7 +157,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 				}
 				result.setName(testStructureName.trim());
 				if (result instanceof TestCompositeStructure) {
-					((TestCompositeStructure) result).setChildCount(propertyFile.getParentFile().listFiles(
+					((TestCompositeStructure) result).setChildCountInBackend(propertyFile.getParentFile().listFiles(
 							getDirectoryFilter()).length);
 					((TestCompositeStructure) result)
 							.setLazyLoader(getTestProjectLazyLoader((TestCompositeStructure) result));
@@ -220,7 +203,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 
 	@Override
 	public void createTestStructure(TestStructure testStructure) throws SystemException {
-		Path pathToTestStructure = Paths.get(getPathToTestStructureDirectory(testStructure));
+		Path pathToTestStructure = Paths.get(FitSlimFileSystemUtility.getPathToTestStructureDirectory(testStructure));
 		if (Files.exists(pathToTestStructure)) {
 			throw new SystemException("TestStructure allready exits");
 		}
@@ -280,7 +263,7 @@ public class FitSlimTestStructureService implements TestStructureService {
 	@Override
 	public void removeTestStructure(TestStructure testStructure) throws SystemException {
 		try {
-			Files.walkFileTree(Paths.get(getPathToTestStructureDirectory(testStructure)),
+			Files.walkFileTree(Paths.get(FitSlimFileSystemUtility.getPathToTestStructureDirectory(testStructure)),
 					new SimpleFileVisitor<Path>() {
 						@Override
 						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -330,33 +313,6 @@ public class FitSlimTestStructureService implements TestStructureService {
 					+ e.getMessage(), e);
 		}
 		return testResult;
-	}
-
-	/**
-	 * 
-	 * @param testStructure
-	 *            used to get the TestProcject and looks it's location in the
-	 *            filesystem.
-	 * @return path as string of the root element of the given teststructure.
-	 */
-	public String getPathToProject(TestStructure testStructure) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(Platform.getLocation().toFile().toPath().toString()).append(File.separator)
-				.append(testStructure.getRootElement().getName());
-		return sb.toString();
-	}
-
-	@Override
-	public String getTestStructureAsText(TestStructure testStructure) throws SystemException {
-		try {
-			Path pathToTestStructure = Paths.get(getPathToTestStructureDirectory(testStructure));
-			return new String(Files.readAllBytes(Paths.get(pathToTestStructure.toString() + File.separator
-					+ "content.txt")));
-		} catch (IOException e) {
-			LOGGER.error("Error reading content of teststructrue: " + testStructure, e);
-			throw new SystemException("Error reading content of teststructrue: " + testStructure + "\n"
-					+ e.getMessage(), e);
-		}
 	}
 
 	@Override
@@ -421,13 +377,6 @@ public class FitSlimTestStructureService implements TestStructureService {
 	public void clearHistory(TestStructure testStructure) throws SystemException {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public boolean isTestStructureInHirachieOfChildTestStructure(TestStructure changedTestStructure,
-			TestStructure childTestStructure) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	@Override

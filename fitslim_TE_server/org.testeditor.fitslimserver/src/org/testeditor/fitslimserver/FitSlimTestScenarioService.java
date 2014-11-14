@@ -24,7 +24,6 @@ import org.testeditor.core.model.teststructure.TestStructure;
 import org.testeditor.core.services.interfaces.TestEditorGlobalConstans;
 import org.testeditor.core.services.interfaces.TestScenarioService;
 import org.testeditor.core.services.interfaces.TestStructureContentService;
-import org.testeditor.core.services.interfaces.TestStructureService;
 
 /**
  * TestScenarioService implemantation for the Fitnesse Slim Filesystem backend.
@@ -33,7 +32,6 @@ import org.testeditor.core.services.interfaces.TestStructureService;
 public class FitSlimTestScenarioService implements TestScenarioService {
 
 	private static final Logger LOGGER = Logger.getLogger(FitSlimTestScenarioService.class);
-	private TestStructureService testStructureService;
 	private TestStructureContentService testStructureContentService;
 
 	@Override
@@ -77,7 +75,7 @@ public class FitSlimTestScenarioService implements TestScenarioService {
 			throws SystemException {
 		TestScenario testScenario = (TestScenario) parent.getTestChildByFullName(includeOfScenario.trim());
 		if (testScenario.getTestComponents().isEmpty()) {
-			readTestScenario(testScenario, testStructureService.getTestStructureAsText(testScenario));
+			readTestScenario(testScenario, testStructureContentService.getTestStructureAsSourceText(testScenario));
 		}
 		return testScenario;
 	}
@@ -99,32 +97,6 @@ public class FitSlimTestScenarioService implements TestScenarioService {
 			List<TestComponent> testComponents = testStructureContentService.parseFromString(testScenario,
 					testStructureText);
 			testScenario.setTestComponents(testComponents);
-		}
-	}
-
-	/**
-	 * Bind the Service.
-	 * 
-	 * @param service
-	 *            the TestStructureService used in this service.
-	 */
-	public void bind(TestStructureService service) {
-		if (service.getId().equals(FitSlimTestServerConstants.PLUGIN_ID)) {
-			testStructureService = service;
-			LOGGER.info("Bind TestStructureService: " + service);
-		}
-	}
-
-	/**
-	 * Removes the testStrucutreService.
-	 * 
-	 * @param service
-	 *            to be removed.
-	 */
-	public void unBind(TestStructureService service) {
-		if (service.getId().equals(FitSlimTestServerConstants.PLUGIN_ID)) {
-			testStructureService = null;
-			LOGGER.info("Unbind TestStructureService");
 		}
 	}
 

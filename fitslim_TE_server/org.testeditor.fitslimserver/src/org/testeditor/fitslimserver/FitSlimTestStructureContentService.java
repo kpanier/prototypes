@@ -55,8 +55,7 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 
 	private String loadTestStructureContentFromFile(TestStructure testStructure) throws SystemException {
 		String result = null;
-		FitSlimTestStructureService structureService = new FitSlimTestStructureService();
-		Path path = Paths.get(structureService.getPathToTestStructureDirectory(testStructure) + File.separator
+		Path path = Paths.get(FitSlimFileSystemUtility.getPathToTestStructureDirectory(testStructure) + File.separator
 				+ "content.txt");
 		try {
 			result = new String(Files.readAllBytes(path));
@@ -70,8 +69,7 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 
 	@Override
 	public void saveTestStructureData(TestStructure testStructure) throws SystemException {
-		FitSlimTestStructureService structureService = new FitSlimTestStructureService();
-		Path path = Paths.get(structureService.getPathToTestStructureDirectory(testStructure) + File.separator
+		Path path = Paths.get(FitSlimFileSystemUtility.getPathToTestStructureDirectory(testStructure) + File.separator
 				+ "content.txt");
 		try {
 			Files.write(path, testStructure.getSourceCode().getBytes());
@@ -110,6 +108,20 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 	@Override
 	public String getId() {
 		return FitSlimTestServerConstants.PLUGIN_ID;
+	}
+
+	@Override
+	public String getTestStructureAsSourceText(TestStructure testStructure) throws SystemException {
+		try {
+			Path pathToTestStructure = Paths.get(FitSlimFileSystemUtility
+					.getPathToTestStructureDirectory(testStructure));
+			return new String(Files.readAllBytes(Paths.get(pathToTestStructure.toString() + File.separator
+					+ "content.txt")));
+		} catch (IOException e) {
+			LOGGER.error("Error reading content of teststructrue: " + testStructure, e);
+			throw new SystemException("Error reading content of teststructrue: " + testStructure + "\n"
+					+ e.getMessage(), e);
+		}
 	}
 
 }
