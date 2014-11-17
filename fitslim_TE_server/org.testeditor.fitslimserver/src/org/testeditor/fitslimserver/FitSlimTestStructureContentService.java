@@ -11,7 +11,9 @@
  *******************************************************************************/
 package org.testeditor.fitslimserver;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -115,13 +117,17 @@ public class FitSlimTestStructureContentService implements TestStructureContentS
 		try {
 			Path pathToTestStructure = Paths.get(FitSlimFileSystemUtility
 					.getPathToTestStructureDirectory(testStructure));
-			return new String(Files.readAllBytes(Paths.get(pathToTestStructure.toString() + File.separator
-					+ "content.txt")));
+			BufferedReader br = new BufferedReader(new FileReader(pathToTestStructure.toString() + File.separator
+					+ "content.txt"));
+			StringBuilder sb = new StringBuilder();
+			while (br.ready()) {
+				sb.append(br.readLine()).append("\n");
+			}
+			return sb.toString().trim();
 		} catch (IOException e) {
 			LOGGER.error("Error reading content of teststructrue: " + testStructure, e);
 			throw new SystemException("Error reading content of teststructrue: " + testStructure + "\n"
 					+ e.getMessage(), e);
 		}
 	}
-
 }
